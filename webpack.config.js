@@ -1,7 +1,6 @@
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-require('es7-object-polyfill'); // jenkins needs this, it runs Node 6
 
 module.exports = {
 	optimization: {
@@ -9,18 +8,22 @@ module.exports = {
 	},
 	entry: {
 		main: './index.js',
+		v6: './index-v6.js',
 		'ag-grid': './components/grid/index.js',
 		'text-input': './components/text-input/index.js',
 		'text-input-v2': './components/text-input-v2/index.js',
 		'group-selector': './components/group-selector/index.js',
 		'share-dialog': './components/share-dialog/index.js',
 		'product-drawer': './components/product-drawer/index.js',
+		icons12: './components/icons/12px/index.js',
+		icons18: './components/icons/18px/index.js',
 	},
 	devtool: 'sourcemap',
 	output: {
 		filename: '[name].js',
 		path: path.resolve('./dist'),
 		libraryTarget: 'commonjs2',
+		jsonpFunction: 'styledUIJsonp',
 	},
 	externals: [nodeExternals()],
 	plugins: [
@@ -43,36 +46,12 @@ module.exports = {
 				test: /\.(svg)$/,
 				use: [
 					{
-						loader: 'url-loader',
+						loader: '@svgr/webpack',
 						options: {
-							limit: 8192,
-						},
-					},
-					{
-						loader: 'image-webpack-loader',
-						options: {
-							svgo: {
-								plugins: [
-									{ cleanupAttrs: true },
-									{ removeDoctype: true },
-									{ removeComments: true },
-									{ removeMetadata: true },
-									{ removeTitle: true },
-									{ removeDesc: true },
-									{ removeEditorsNSData: true },
-									{ removeUselessStrokeAndFill: true },
-									{ cleanupIDs: true },
-									{ collapseGroups: true },
-									{ convertShapeToPath: true },
-								],
+							replaceAttrValues: {
+								'#7A7A7A': '{props.color || "#7A7A7A"}',
+								'#888': '{props.color || "#7A7A7A"}',
 							},
-						},
-					},
-					{
-						loader: 'svg-colorize-loader',
-						options: {
-							color1: '#000000',
-							color2: '#FFFFFF',
 						},
 					},
 				],

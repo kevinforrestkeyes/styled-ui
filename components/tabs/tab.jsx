@@ -1,21 +1,9 @@
 import React, { useCallback, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { SmallCheck } from '../icons';
+import { Checkmark } from '../icons/12px';
 import * as Styled from './styled.jsx';
 
-export function Tab(props) {
-	// PropType linting is diabled so our hidden props can be destuctured along with own consumer props
-	/* eslint-disable react/prop-types */
-	const {
-		children,
-		disabled,
-		styleOverrides,
-		index,
-		selected,
-		onSelectTab,
-		theme,
-		panelId,
-	} = props;
+export function Tab({ children, index, selected, onSelectTab, disabled, panelId, ...props }) {
 	const tabRef = useRef();
 
 	useEffect(() => {
@@ -29,22 +17,16 @@ export function Tab(props) {
 	}, [onSelectTab, index]);
 
 	return (
-		<Styled.Tab
+		<Styled.TabCore
+			ref={tabRef}
 			disabled={disabled}
-			panelId={panelId || ''}
-			selected={selected}
 			onClick={handleSelectTab}
+			selected={selected}
+			panelId={panelId || ''}
+			{...props}
 		>
-			<Styled.TabContent
-				ref={tabRef}
-				disabled={disabled}
-				theme={theme}
-				styleOverrides={styleOverrides}
-				selected={selected}
-			>
-				{typeof children === 'function' ? children({ selected, disabled }) : children}
-			</Styled.TabContent>
-		</Styled.Tab>
+			{typeof children === 'function' ? children({ selected, disabled }) : children}
+		</Styled.TabCore>
 	);
 }
 
@@ -52,31 +34,22 @@ Tab.propTypes = {
 	/** The tab's label */
 	children: PropTypes.oneOfType([PropTypes.node, PropTypes.func]).isRequired,
 	disabled: PropTypes.bool,
-	styleOverrides: PropTypes.shape({
-		fontSize: PropTypes.string,
-		width: PropTypes.string,
-		padding: PropTypes.string,
-	}),
 };
 
 Tab.defaultProps = {
 	styleOverrides: {},
 };
 
-export function SequencedTab(props) {
-	// PropType linting is diabled so our hidden props can be destuctured along with own consumer props
-	/* eslint-disable react/prop-types */
-	const {
-		children,
-		disabled,
-		completed,
-		styleOverrides,
-		index,
-		selected,
-		onSelectTab,
-		theme,
-		panelId,
-	} = props;
+export function SequencedTab({
+	children,
+	disabled,
+	completed,
+	index,
+	selected,
+	onSelectTab,
+	panelId,
+	...props
+}) {
 	const tabRef = useRef();
 
 	useEffect(() => {
@@ -97,14 +70,16 @@ export function SequencedTab(props) {
 			onClick={handleSelectTab}
 		>
 			<Styled.Circle selected={selected} completed={completed} disabled={disabled}>
-				{completed ? <SmallCheck /> : index + 1}
+				{completed ? <Checkmark color="white" /> : index + 1}
 			</Styled.Circle>
 			<Styled.SequencedTabContent
 				ref={tabRef}
 				disabled={disabled}
-				theme={theme}
-				styleOverrides={styleOverrides}
 				selected={selected}
+				fontSize={3}
+				paddingX={5}
+				paddingY={3}
+				{...props}
 			>
 				{typeof children === 'function' ? children({ selected, disabled }) : children}
 			</Styled.SequencedTabContent>

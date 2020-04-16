@@ -94,6 +94,60 @@ const colors = {
 	inputBorderColor: '#C7C7C7',
 	inputFocusedBorderColor: '#278ed4',
 	inputFocusedShadowColor: '#d0e6f6',
+	inputPlaceholderColor: '#C7C7C7',
+};
+
+colors.button = {
+	primaryForeground: colors.white,
+	primaryForegroundDisabled: colors.white,
+	primaryBackground: colors.blue4,
+	primaryHover: colors.blue5,
+	primaryActive: '#015d95',
+	primaryDisabled: colors.blue2,
+
+	minorForeground: colors.gray66,
+	minorForegroundDisabled: colors.gray34,
+	minorBackground: colors.gray8,
+	minorHover: colors.gray14,
+	minorActive: colors.gray22,
+	minorDisabled: colors.gray4,
+
+	transparentHover: colors.blue1,
+
+	dangerForeground: colors.white,
+	dangerForegroundDisabled: colors.white,
+	dangerBackground: colors.red4,
+	dangerHover: colors.red5,
+	dangerActive: '#a11313',
+	dangerDisabled: colors.red2,
+
+	focusBorder: colors.blue1,
+	focusShadow: colors.blue3,
+};
+
+colors.tab = {
+	modalForeground: colors.gray66,
+	modalForegroundActive: colors.blue5,
+	modalForegroundDisabled: colors.gray34,
+	modalBorder: colors.gray14,
+	modalBackground: colors.gray8,
+	modalBackgroundActive: colors.white,
+	modalHover: colors.blue1,
+	modalActive: colors.blue2,
+	modalDisabled: colors.gray4,
+	modalColorStripe: 'transparent',
+	modalColorStripeActive: colors.blue4,
+
+	pageForeground: colors.gray66,
+	pageForegroundActive: colors.blue5,
+	pageForegroundDisabled: colors.gray34,
+	pageBackground: 'transparent',
+	pageBackgroundActive: colors.blue1,
+	pageHover: colors.blue1,
+	pageActive: colors.blue1,
+	pageDisabled: colors.white,
+	pageColorStripe: colors.gray14,
+	pageColorStripeActive: colors.blue4,
 };
 
 const fonts = {
@@ -111,7 +165,10 @@ const lineHeights = ['0px', '16px', '18px', '20px', '22px', '24px', '28px', '34p
 // UI elements have a line-height matching the font-size
 lineHeights.ui = 1;
 
-const sizes = []; // todo
+const sizes = [];
+sizes.inputs = {
+	shortText: '128px',
+};
 
 const borders = [0, '1px solid'];
 

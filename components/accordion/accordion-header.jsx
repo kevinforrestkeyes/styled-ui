@@ -3,19 +3,26 @@ import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import { Text } from '../Text';
 import { Box } from '../Box';
-import ExpandedIcon from './svgs/expanded-icon.svg';
-import CollapsedIcon from './svgs/collapsed-icon.svg';
+import { UtilityButton } from '../button';
+import { ChevronRight, ChevronDown } from '../icons/12px';
 import { useAccordionContext, useAccordionItemContext } from './accordion-util';
-import { resetStyles } from '../utils';
 
-export function AccordionHeader({ ariaLevel, children, renderCustomIndicator, subtitle }) {
+export function AccordionHeader({
+	ariaLevel,
+	children,
+	renderCustomIndicator,
+	subtitle,
+	...props
+}) {
 	const {
 		focusedMenuItem,
 		focusableChildList,
 		hideArrows,
 		setFocusedMenuItem,
+		variant,
 	} = useAccordionContext();
-	const { isExpanded, onExpansion, headerId, panelId } = useAccordionItemContext();
+	const { isExpanded, onExpansion, headerId, panelId, isPinned } = useAccordionItemContext();
+	const shouldHideArrows = hideArrows || isPinned;
 
 	const handleExpansion = useCallback(() => {
 		onExpansion(!isExpanded);
@@ -50,51 +57,62 @@ export function AccordionHeader({ ariaLevel, children, renderCustomIndicator, su
 
 	return (
 		<Box
-			display="grid"
+			display="flex"
 			gridArea="header"
-			gridTemplateColumns={
-				renderCustomIndicator ? '[title] 1fr [indicator] min-content' : '[title] auto [space] 0'
-			}
+			borderTop={1}
+			borderTopColor="gray14"
+			alignItems="center"
+			{...props}
 		>
 			<Heading ariaLevel={ariaLevel}>
 				<Button
 					isExpanded={isExpanded}
-					onBlur={handleBlur}
-					onClick={handleExpansion}
-					onFocus={handleFocus}
+					onBlur={isPinned ? undefined : handleBlur}
+					onClick={isPinned ? undefined : handleExpansion}
+					onFocus={isPinned ? undefined : handleFocus}
 					ref={buttonRef}
 					panelId={panelId}
 					headerId={headerId}
+					disabled={isPinned}
+					paddingY={variant === 'minimal' ? 4 : 5}
+					paddingX={variant === 'minimal' ? 4 : [5, 6]}
+					gridColumnGap={4}
+					hideArrows={shouldHideArrows}
 				>
-					<ButtonContentWrapper
-						paddingY={5}
-						paddingX={[5, 6]}
-						gridColumnGap={4}
-						hideArrows={hideArrows}
-						subtitle={subtitle}
-					>
-						<>
-							{!hideArrows && (
-								<img src={isExpanded ? ExpandedIcon : CollapsedIcon} role="presentation" alt="" />
-							)}
-							<ButtonContent>
-								{children ? (
-									<Text textStyle="ui.16" display="grid" color="gray52" fontWeight="semibold">
-										{children}
-									</Text>
-								) : null}
-								{subtitle ? (
-									<Text textStyle="ui.14" display="grid" color="gray52">
-										{subtitle}
-									</Text>
-								) : null}
-							</ButtonContent>
-						</>
-					</ButtonContentWrapper>
+					{!shouldHideArrows && (
+						<Box marginRight={variant === 'minimal' ? 3 : 4} lineHeight={0} alignSelf="center">
+							{isExpanded ? <ChevronDown /> : <ChevronRight />}
+						</Box>
+					)}
+					<ButtonContent>
+						{children ? (
+							<Text
+								textStyle={variant === 'minimal' ? 'ui.14' : 'ui.16'}
+								display="grid"
+								color="gray66"
+								fontWeight="semibold"
+								lineHeight="16px"
+							>
+								{children}
+							</Text>
+						) : null}
+						{subtitle ? (
+							<Text
+								textStyle="ui.14"
+								display="block"
+								color="gray52"
+								overflow="hidden"
+								textOverflow="ellipsis"
+								lineHeight="16px"
+							>
+								{subtitle}
+							</Text>
+						) : null}
+					</ButtonContent>
 				</Button>
 			</Heading>
 			{renderCustomIndicator ? (
-				<Box gridColumn="indicator" gridRow={1} marginTop={5} marginRight={[5, 6]}>
+				<Box display="flex" gridRow={1} marginRight={variant === 'minimal' ? 4 : [5, 6]}>
 					{renderCustomIndicator({ isExpanded, onExpansion: handleExpansion })}
 				</Box>
 			) : null}
@@ -117,36 +135,23 @@ const Heading = styled.header.attrs(({ ariaLevel }) => ({
 	role: 'heading',
 	'aria-level': ariaLevel,
 }))`
-	grid-column: 1 / span 2;
-	grid-row: 1;
+	flex: 1;
 	min-width: 0;
 	width: 100%;
 `;
 
-const Button = styled.button.attrs(({ isExpanded, panelId, headerId }) => ({
+const Button = styled(UtilityButton).attrs(({ isExpanded, panelId, headerId }) => ({
 	role: 'button',
 	'aria-expanded': isExpanded,
 	'aria-controls': `accordion-panel-${panelId}`,
 	id: `accordion-header-${headerId}`,
 }))`
-	${resetStyles};
-
-	padding: 0;
-	border: 0;
-	background: 0;
-	appearance: none;
 	width: 100%;
 	height: 100%;
 	text-align: left;
-`;
-
-const ButtonContentWrapper = styled(Box)`
-	display: grid;
-	align-items: center;
-	grid-template-columns: ${props => (props.hideArrows ? 'auto' : 'min-content auto')};
-
+	display: flex;
+	align-items: baseline;
 	line-height: 1;
-	border-top: 1px solid ${({ theme }) => theme.colors.gray14};
 `;
 
 const ButtonContent = styled(Box).attrs(() => ({ gridGap: 6 }))`

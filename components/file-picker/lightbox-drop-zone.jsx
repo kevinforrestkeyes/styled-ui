@@ -1,6 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { Button } from '../button';
+import { LegacyButton as Button } from '../button';
 import { DropZone } from '../drop-zone';
 import { CameraSvg } from './svgs';
 import * as Styled from './styled';
@@ -27,11 +27,11 @@ export function LightboxDropZone({ addFile, allowMultiSelect, showDetails, local
 	}, []);
 
 	return (
-		<DropZone onDrop={handleUploadWithFileInput}>
+		<DropZone onDrop={handleUploadWithFileInput} display="grid">
 			<Styled.DragDropContainer height={showDetails ? '415px' : '156px'}>
 				{showDetails && (
 					<div>
-						<img alt="drag and drop" src={CameraSvg} />
+						<CameraSvg />
 					</div>
 				)}
 				<Styled.DragDropText>{localizedResources.dragDropText}</Styled.DragDropText>

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import debounce from 'lodash.debounce';
 import throttle from 'lodash.throttle';
 import memoize from 'memoize-one';
+import { Box } from '../Box';
 import { PopoverManager, PopoverReference, Popover } from '../popover';
 import * as Styled from './styled';
 
@@ -18,6 +19,7 @@ function createDerivedValue(getDependencies, calculateValue) {
 
 export class Slider extends PureComponent {
 	static propTypes = {
+		disabled: PropTypes.bool,
 		value: PropTypes.number.isRequired,
 		/** Array of numbers or strings to be used as tooltip labels */
 		labels: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number])),
@@ -40,6 +42,7 @@ export class Slider extends PureComponent {
 
 	static defaultProps = {
 		hideAvailableStops: false,
+		labels: [],
 		styleOverrides: {},
 	};
 
@@ -52,7 +55,7 @@ export class Slider extends PureComponent {
 	_slider = createRef();
 	_timeout = null;
 
-	componentWillReceiveProps(nextProps) {
+	UNSAFE_componentWillReceiveProps(nextProps) {
 		if (nextProps.value !== this.state.value) {
 			this.setState({ value: nextProps.value });
 		}
@@ -80,9 +83,12 @@ export class Slider extends PureComponent {
 	};
 
 	getStops = createDerivedValue(() => [this.props.stopCount], stopCount => range(0, stopCount));
-	getTrack = createDerivedValue(() => [this.props.stopCount], stopCount => range(0, stopCount - 1));
 
 	handleTouchStart = event => {
+		if (this.props.disabled) {
+			return;
+		}
+
 		event.preventDefault();
 		document.addEventListener('touchmove', this.handleTouchMove);
 		document.addEventListener('touchend', this.handleTouchEnd);
@@ -91,6 +97,10 @@ export class Slider extends PureComponent {
 	};
 
 	handleTouchMove = event => {
+		if (this.props.disabled) {
+			return;
+		}
+
 		event.preventDefault();
 		const value = this.calculateValue(event.touches[0].clientX);
 		if (this.state.value !== value) {
@@ -102,6 +112,10 @@ export class Slider extends PureComponent {
 	};
 
 	handleTouchEnd = event => {
+		if (this.props.disabled) {
+			return;
+		}
+
 		event.preventDefault();
 		document.removeEventListener('touchmove', this.handleTouchMove);
 		document.removeEventListener('touchend', this.handleTouchEnd);
@@ -115,6 +129,10 @@ export class Slider extends PureComponent {
 	};
 
 	handleMouseDown = event => {
+		if (this.props.disabled) {
+			return;
+		}
+
 		if (event.button !== 0 || this.state.isSliding) {
 			return;
 		}
@@ -126,6 +144,10 @@ export class Slider extends PureComponent {
 	};
 
 	handleMouseMove = event => {
+		if (this.props.disabled) {
+			return;
+		}
+
 		event.preventDefault();
 		const value = this.calculateValue(event.clientX);
 		if (this.state.value !== value) {
@@ -137,6 +159,10 @@ export class Slider extends PureComponent {
 	};
 
 	handleMouseUp = event => {
+		if (this.props.disabled) {
+			return;
+		}
+
 		event.preventDefault();
 		document.removeEventListener('mousemove', this.handleMouseMove);
 		document.removeEventListener('mouseup', this.handleMouseUp);
@@ -167,8 +193,15 @@ export class Slider extends PureComponent {
 	}, 250);
 
 	handleThrottledKeyDown = throttle(event => {
-		const { minValue, maxValue, stopCount } = this.props;
+		const { disabled, minValue, maxValue, stopCount } = this.props;
 		const { value: currentValue } = this.state;
+
+		if (disabled) {
+			this.setState({ isHovered: true }, () => {
+				this.handleTogglePopover(false, 400);
+			});
+			return;
+		}
 
 		if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
 			const newValue = currentValue + 1;
@@ -225,87 +258,146 @@ export class Slider extends PureComponent {
 	};
 
 	render() {
-		const { hideAvailableStops, maxValue, minValue, styleOverrides } = this.props;
-		const { isHovered } = this.state;
-		const labels = this.props.labels || [];
-		const track = this.getTrack();
+		const {
+			value,
+			labels,
+			minValue,
+			maxValue,
+			onSlide,
+			onStop,
+			stopCount,
+			hideAvailableStops,
+			styleOverrides,
+			disabled,
+			...props
+		} = this.props;
+
+		const { isHovered, isSliding, value: pendingValue } = this.state;
 		const stops = this.getStops();
 
+		const activeStopIndex = Math.min(Math.round(pendingValue), stopCount - 1);
+
 		return (
-			<Styled.SliderContainer
+			<Box
 				onDragStart={event => event.preventDefault()}
 				onKeyDown={this.handleKeyDown}
 				onMouseDown={this.handleMouseDown}
 				onTouchStart={this.handleTouchStart}
 				tabIndex="0"
 				ref={this._slider}
+				position="relative"
+				width="100%"
+				minHeight="28px"
+				css={`
+					cursor: ${({ disabled }) => (disabled ? 'normal' : 'pointer')};
+					touch-action: none;
+
+					&:focus {
+						box-shadow: 0 0 0 0.2rem rgba(30, 145, 214, 0.5);
+						outline: none;
+					}
+				`}
+				{...props}
 			>
-				<Styled.TrackContainer>
-					<Styled.TrackGradient />
-					{track.map(index => (
-						<Styled.Track
-							active={index < this.state.value}
-							invalid={this.props.maxValue && index >= this.props.maxValue}
-							trackFirst={index === 0}
-							trackLast={
-								index === maxValue - 1 || (!maxValue && index === this.props.stopCount - 2)
-							}
-							key={index}
-							styleOverrides={styleOverrides}
-						/>
-					))}
-				</Styled.TrackContainer>
-				<Styled.StopContainer>
-					{stops.map(index => (
-						<Styled.Stop
-							available={
-								!hideAvailableStops &&
-								(index > this.state.value &&
-									!(index >= this.props.maxValue) &&
-									!(index === this.props.stopCount - 1))
-							}
-							minimumAvailable={index === minValue && minValue > 0}
-							key={index}
-							styleOverrides={styleOverrides}
-						/>
-					))}
-				</Styled.StopContainer>
+				<TrackPart
+					height="8px"
+					top="50%"
+					transform="translateY(-50%)"
+					backgroundImage="linear-gradient(to left, #79cafb, #1e91d6)"
+				>
+					<TrackPart
+						left={`${getPercentage(activeStopIndex, stopCount - 1)}%`}
+						right={0}
+						bg={(styleOverrides && styleOverrides.backgroundColor) || '#fff'}
+					/>
+					<TrackPart
+						bg="#ebebeb"
+						left={`${getPercentage(activeStopIndex, stopCount - 1)}%`}
+						right={`${100 -
+							getPercentage(
+								typeof maxValue === 'number' ? maxValue : stopCount - 1,
+								stopCount - 1,
+							)}%`}
+					/>
+				</TrackPart>
+				{!hideAvailableStops || minValue ? (
+					<Styled.StopContainer>
+						{stops.map(index => (
+							<Styled.Stop
+								available={
+									!hideAvailableStops &&
+									(index > activeStopIndex && !(index >= maxValue) && !(index === stopCount - 1))
+								}
+								minimumAvailable={index === minValue && minValue > 0}
+								key={index}
+								styleOverrides={styleOverrides}
+							/>
+						))}
+					</Styled.StopContainer>
+				) : null}
 				<Styled.ThumbContainer
 					onMouseEnter={this.handleMouseEnter}
 					onMouseLeave={this.handleMouseLeave}
 				>
-					{stops.map(index => (
-						<Styled.ThumbAnchor
-							key={index}
-							trackStart={index === 0}
-							trackEnd={index === this.props.stopCount - 1}
-						>
-							<PopoverManager>
-								<PopoverReference>
-									<Styled.Thumb
-										active={this.state.isSliding}
-										hovered={this.state.isHovered}
-										hidden={index !== this.state.value}
-									/>
-								</PopoverReference>
-								<Popover
-									isOpen={
-										index === this.state.value &&
-										isHovered &&
-										labels[index] !== undefined &&
-										labels[index] !== ''
-									}
-									placement={'top'}
-									container="body"
-									modifiers={{ offset: { offset: '0, 33' } }}
-								>
-									{`${labels[index]}`}
-								</Popover>
-							</PopoverManager>
-						</Styled.ThumbAnchor>
-					))}
+					<Thumb
+						isSliding={isSliding}
+						isHovered={isHovered}
+						isAtTrackStart={activeStopIndex === 0}
+						isAtTrackEnd={activeStopIndex === stopCount - 1}
+						position={getPercentage(activeStopIndex, stopCount - 1)}
+						label={labels[activeStopIndex]}
+						disabled={disabled}
+					/>
 				</Styled.ThumbContainer>
-			</Styled.SliderContainer>
+			</Box>
 		);
 	}
 }
+
+const TrackPart = ({ children, left, right, ...props }) => (
+	<Box
+		position="absolute"
+		left={0}
+		right={0}
+		height="100%"
+		overflow="hidden"
+		borderRadius={100}
+		style={{ left, right }}
+		{...props}
+	>
+		{children}
+	</Box>
+);
+
+function getPercentage(index, max) {
+	return (index / max) * 100;
+}
+
+const Thumb = React.memo(
+	({ isSliding, isHovered, isAtTrackStart, isAtTrackEnd, position, label, disabled }) => {
+		const thumb = <Styled.Thumb active={isSliding} hovered={isHovered} disabled={disabled} />;
+
+		const isPopupOpen = !!(isHovered && (label || label === 0));
+		return (
+			<Styled.ThumbAnchor
+				style={{
+					left: isAtTrackStart ? '7px' : isAtTrackEnd ? 'auto' : `${position}%`,
+					right: isAtTrackEnd ? '7px' : 'auto',
+				}}
+			>
+				<PopoverManager>
+					<PopoverReference>{thumb}</PopoverReference>
+					<Popover
+						key={position}
+						isOpen={isPopupOpen}
+						placement="top"
+						container="body"
+						modifiers={{ offset: { offset: '0, 33' } }}
+					>
+						{`${label}`}
+					</Popover>
+				</PopoverManager>
+			</Styled.ThumbAnchor>
+		);
+	},
+);

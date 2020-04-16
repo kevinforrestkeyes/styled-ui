@@ -63,6 +63,10 @@ export const Button = styled.button`
 		border: 0;
 	}
 
+	&:disabled {
+		pointer-events: none;
+	}
+
 	> svg {
 		height: 1em;
 		width: 1em;
@@ -77,13 +81,18 @@ export const Button = styled.button`
 					primary: {
 						border: '1px solid',
 						color: 'white',
+						'@media (hover: hover)': {
+							'&:hover': {
+								color: 'white',
+							},
+						},
 					},
 					primaryOutline: {
 						border: '1px solid',
 						background: 'none',
 						'@media (hover: hover)': {
 							'&:hover': {
-								color: disabled || 'white',
+								color: disabled ? 'blue2' : 'white',
 							},
 						},
 						'&:active': {
@@ -97,7 +106,12 @@ export const Button = styled.button`
 					},
 					minor: {
 						border: '1px solid',
-						color: disabled ? 'gray34' : 'gray66',
+						color: disabled ? 'gray22' : 'gray66',
+						'@media (hover: hover)': {
+							'&:hover': {
+								color: disabled ? 'gray22' : 'gray66',
+							},
+						},
 					},
 					minorTransparent: {
 						border: '1px solid transparent',
@@ -207,15 +221,27 @@ export const Button = styled.button`
 			variants: {
 				small: {
 					height: '32px',
-					paddingX: condensed ? '7px' : '9px',
+					paddingX: condensed ? '6px' : '8px',
+					'> svg': {
+						height: '18px',
+						width: '18px',
+					},
 				},
 				medium: {
 					height: '40px',
-					paddingX: condensed ? '11px' : '15px',
+					paddingX: condensed ? '10px' : '14px',
+					'> svg': {
+						height: '18px',
+						width: '18px',
+					},
 				},
 				large: {
 					height: '56px',
-					paddingX: condensed ? '15px' : '23px',
+					paddingX: condensed ? '14px' : '22px',
+					'> svg': {
+						height: '24px',
+						width: '24px',
+					},
 				},
 			},
 		})}

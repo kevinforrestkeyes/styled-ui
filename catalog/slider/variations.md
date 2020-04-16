@@ -30,7 +30,7 @@ showSource: true
 state: {}
 ---
 <div style={{background: "#fff", padding: 20}}>
-	<Slider value={1} stopCount={5} labels={['Admins', 'Moderators', 'Members', 'Followers', 'Public']} />
+	<Slider value={1} stopCount={5} labels={['Admins', 'Moderators', 'Members', 'Followers', 'Public']} disabled />
 	<Slider value={1} stopCount={5} labels={['One', 'Two', 'Three', 'Four', 'Five']}/>
 	<Slider value={1} minValue={1} maxValue={3} stopCount={5} labels={['', 'Min', '', 'Max', '']}/>
 </div>
@@ -64,7 +64,6 @@ state: { value: 1 }
 ### hideAvailableStops
 
 For sliders with many stops, consider using the `hideAvailableStops` option.
-This component has performances issues with many stops. Consider using no more than 51 stops for percentile sliders.
 
 ```react
 showSource: true

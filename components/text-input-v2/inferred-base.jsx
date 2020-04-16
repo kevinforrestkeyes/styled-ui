@@ -67,6 +67,8 @@ export class InferredBase extends Component {
 	static propTypes = {
 		/** Decimal percent value for the confidence value. E.g. 0.75 */
 		confidence: PropTypes.number,
+		/** Show percentage text in tooltip.  Defaults to true. */
+		shouldShowPercentageText: PropTypes.bool,
 		/** String to display in the confidence tooltip. Defaults to Heuristic algorithm */
 		confidenceSource: PropTypes.string,
 		/** Function called when the OK button is clicked. Confidence should be set to null to clear the lightbulb indicator. */
@@ -79,10 +81,11 @@ export class InferredBase extends Component {
 
 	static defaultProps = {
 		confidenceSource: 'Heuristic Algorithm',
+		shouldShowPercentageText: true,
 	};
 
 	render() {
-		const { confidence, confidenceSource, onConfirm } = this.props;
+		const { confidence, shouldShowPercentageText, confidenceSource, onConfirm } = this.props;
 
 		const ConfidenceIcon =
 			confidence >= 0.9 ? (
@@ -96,11 +99,12 @@ export class InferredBase extends Component {
 		const tooltipContents = (
 			<TooltipContents>
 				<StyledParagraph>
-					Value guessed with {Math.round(confidence * 100)}% confidence.
-					<br />
-					Click OK if you can confirm value is correct, or delete or change the value.
+					{confidence && !shouldShowPercentageText && (
+						<span>Value guessed with {Math.round(confidence * 100)}% confidence.</span>
+					)}
+					<span>Click OK if you can confirm value is correct, or delete or change the value.</span>
 				</StyledParagraph>
-				<StyledParagraph>Source: {confidenceSource}</StyledParagraph>
+				{confidenceSource && <StyledParagraph>Source: {confidenceSource}</StyledParagraph>}
 			</TooltipContents>
 		);
 

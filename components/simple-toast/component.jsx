@@ -1,8 +1,8 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Transition from 'react-transition-group/Transition';
-import { Button } from '../button';
-import { Close } from '../icons';
+import { LegacyButton as Button } from '../button';
+import { X as Close } from '../icons/18px';
 import * as Styled from './styled.jsx';
 
 const transitionTime = Styled.transitionTime; // milliseconds

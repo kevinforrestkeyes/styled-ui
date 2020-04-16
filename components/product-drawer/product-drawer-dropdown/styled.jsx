@@ -33,7 +33,7 @@ export const ProductDrawerDropdown = styled.div`
 		left: auto;
 		bottom: auto;
 		top: auto;
-		transform: translateX(22%);
+		right: ${({ styleOverrides }) => styleOverrides.tabletRightOffset || '0'};
 		overflow-y: auto;
 		animation-duration: 300ms;
 		animation-timing-function: cubic-bezier(0.33, 0, 0, 1);
@@ -42,10 +42,9 @@ export const ProductDrawerDropdown = styled.div`
 	}
 
 	@media (min-width: ${mediaSizes.desktop}) {
-		transform: translateX(0);
+		right: 0;
 	}
 
-	right: 0;
 	white-space: nowrap;
 	border-radius: 4px;
 	background-color: white;
@@ -196,10 +195,6 @@ export const DropdownSeeMoreLink = styled.a`
 	@media (min-width: ${mediaSizes.tablet}) and (min-height: ${mediaSizes.tablet}) {
 		padding: 14px;
 	}
-`;
-
-export const ProductLinkIcon = styled.img`
-	vertical-align: top;
 `;
 
 export const FooterDivider = styled.hr`

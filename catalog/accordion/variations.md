@@ -16,7 +16,7 @@ state: { expandedSections: [0] }
 ---
 <AccordionDemo>
 	<Accordion expandedSections={state.expandedSections} onExpansion={expandedSections => setState({expandedSections})}>
-		<Accordion.Item>
+		<Accordion.Item pinned>
 			<Accordion.Header subtitle="Subtitle for Section One.">
 				Section One Title
 			</Accordion.Header>
@@ -28,7 +28,7 @@ state: { expandedSections: [0] }
 			</Accordion.Panel>
 		</Accordion.Item>
 		<Accordion.Item>
-			<Accordion.Header>
+			<Accordion.Header subtitle="This is a pretty long subtitle with some descenders.">
 				Section Two Title
 			</Accordion.Header>
 			<Accordion.Panel>
@@ -65,7 +65,10 @@ state: { expandedSections: [0, 2] }
 <AccordionDemo>
 	<Accordion hideArrows expandedSections={state.expandedSections} onExpansion={expandedSections => setState({expandedSections})}>
 		<Accordion.Item>
-			<Accordion.Header renderCustomIndicator={AccordionCustomIndicator}>
+			<Accordion.Header renderCustomIndicator={({ isExpanded, onExpansion }) => (
+					<Checkbox isChecked={isExpanded} onClick={onExpansion} tabIndex={-1} />
+				)
+			}>
 				Section One Title
 			</Accordion.Header>
 			<Accordion.Panel>
@@ -76,7 +79,7 @@ state: { expandedSections: [0, 2] }
 			</Accordion.Panel>
 		</Accordion.Item>
 		<Accordion.Item>
-			<Accordion.Header renderCustomIndicator={AccordionCustomIndicator}>
+			<Accordion.Header>
 				Section Two Title
 			</Accordion.Header>
 			<Accordion.Panel>
@@ -87,7 +90,7 @@ state: { expandedSections: [0, 2] }
 			</Accordion.Panel>
 		</Accordion.Item>
 		<Accordion.Item>
-			<Accordion.Header renderCustomIndicator={AccordionCustomIndicator}>
+			<Accordion.Header>
 				Section Three Title
 			</Accordion.Header>
 			<Accordion.Panel>
@@ -134,6 +137,52 @@ state: { expandedSections: [] }
 			</Accordion.Header>
 			<Accordion.Panel>
 				<div>Then Yahweh called to Moses and spoke to him from the tent of assembly, saying,</div>
+			</Accordion.Panel>
+		</Accordion.Item>
+	</Accordion>
+</AccordionDemo>
+```
+
+### minimal variant
+
+```react
+plain: true
+showSource: true
+state: { expandedSections: [0] }
+---
+<AccordionDemo>
+	<Accordion variant="minimal" expandedSections={state.expandedSections} onExpansion={expandedSections => setState({expandedSections})}>
+		<Accordion.Item pinned>
+			<Accordion.Header subtitle="Subtitle for Section One.">
+				Section One Title
+			</Accordion.Header>
+			<Accordion.Panel>
+				<Form>
+					<Input small placeholder="Name" />
+					<Input small placeholder="Email" />
+				</Form>
+			</Accordion.Panel>
+		</Accordion.Item>
+		<Accordion.Item>
+			<Accordion.Header>
+				Section Two Title
+			</Accordion.Header>
+			<Accordion.Panel>
+				<Form>
+					<Input small placeholder="Home address" />
+					<Input small placeholder="Zip code" />
+				</Form>
+			</Accordion.Panel>
+		</Accordion.Item>
+		<Accordion.Item>
+			<Accordion.Header subtitle="This is a really long subtitle for the section with a switch indicator." renderCustomIndicator={({isExpanded, onExpansion }) => (<Switch isChecked={isExpanded} onClick={onExpansion} />)}>
+				Section Three Title
+			</Accordion.Header>
+			<Accordion.Panel>
+				<Form>
+					<Input small placeholder="Mother's maiden name" />
+					<Input small placeholder="Name of your first pet" />
+				</Form>
 			</Accordion.Panel>
 		</Accordion.Item>
 	</Accordion>

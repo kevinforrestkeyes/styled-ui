@@ -1,53 +1,28 @@
 // ARIA for Tabs are documented in https://www.w3.org/TR/wai-aria-practices-1.1/#tabpanel
 // Tabs from Reach-Ui were used as a base https://ui.reach.tech/tabs
 
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
+import { variant, layout, position, textStyle, border, background } from 'styled-system';
 import 'focus-visible';
+import { Box } from '../Box';
+import { UtilityButton } from '../button';
+import { Text } from '../Text';
 import { resetStyles } from '../utils';
-import { colors, thickness } from '../shared-styles';
 import { mediaSizes } from '../shared-styles';
+
+import 'focus-visible';
+import { common, typography } from '../../theme/system';
+import { tabs, tabLists, selected } from '../../theme/tabs';
 
 const borderRadius = '3px 3px 0 0';
 
-const selectedTab = css`
-	font-weight: 600;
-
-	&::before {
-		content: '';
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 3px;
-		background-color: ${({ theme }) => theme.tabHighlightColor || colors.blueBase};
-
-		border-right: 1px solid ${({ theme }) => theme.tabHighlightColor || colors.blueBase};
-		border-left: 1px solid ${({ theme }) => theme.tabHighlightColor || colors.blueBase};
-		border-radius: ${borderRadius};
-	}
-
-	&::after {
-		content: '';
-		position: absolute;
-		top: 100%;
-		left: 1px;
-		width: calc(100% - 2px);
-		height: 1px;
-		background-color: ${({ theme }) => theme.activeBackgroundColor || 'white'};
-	}
-
-	background-color: ${({ theme }) => theme.activeBackgroundColor || 'white'};
-	border-right: 1px solid ${colors.gray14};
-	border-left: 1px solid ${colors.gray14};
-`;
-
-export const Tab = styled.button.attrs({
+export const Tab = styled(UtilityButton).attrs(({ selected, panelId, disabled }) => ({
 	role: 'tab',
-	'aria-selected': ({ selected }) => selected,
-	'aria-controls': ({ panelId }) => `panel:${panelId}`,
-	'aria-disabled': ({ disabled }) => disabled,
-	tabIndex: ({ selected }) => (selected ? 0 : -1),
-})`
+	'aria-selected': selected,
+	'aria-controls': `panel:${panelId}`,
+	'aria-disabled': disabled,
+	tabIndex: selected ? 0 : -1,
+}))`
 	${resetStyles};
 
 	box-shadow: none;
@@ -78,51 +53,6 @@ export const Tab = styled.button.attrs({
 	}
 `;
 
-export const TabContent = styled.span.attrs({ tabIndex: -1 })`
-	border-radius: ${borderRadius};
-	cursor: ${({ disabled }) => (disabled ? 'default' : 'pointer')};
-	white-space: nowrap;
-	min-height: fit-content;
-	display: inline-block;
-	font-size: ${({ styleOverrides }) => styleOverrides.fontSize || thickness.sixteen};
-	width: ${({ styleOverrides }) => styleOverrides.width};
-	padding: ${({ styleOverrides }) =>
-		styleOverrides.padding || `${thickness.eight} ${thickness.sixteen}`};
-	background-color: ${({ theme }) => theme.inactiveBackgroundColor || colors.gray4};
-
-	&:focus {
-		outline: none;
-	}
-
-	${({ disabled }) => (disabled ? `color: ${colors.gray52}` : '')};
-	${({ selected }) => selected && selectedTab};
-`;
-
-export const TabList = styled.div.attrs({ role: 'tablist' })`
-	border-bottom: 1px solid ${colors.gray14};
-	display: flex;
-	flex-direction: row;
-
-	& > *:not(:last-child) {
-		margin-right: ${thickness.eight};
-	}
-`;
-
-export const TabPanel = styled.div.attrs({
-	role: 'tabpanel',
-	id: ({ panelId }) => `panel:${panelId}`,
-	'aria-expanded': ({ selected }) => selected,
-})`
-	position: relative;
-	padding: ${thickness.eight};
-
-	&:focus {
-		outline: none;
-	}
-
-	${({ selected }) => !selected && 'display: none'};
-`;
-
 export const SequencedTabList = styled.div.attrs(() => ({ role: 'tablist' }))`
 	display: flex;
 	flex-direction: row;
@@ -136,7 +66,7 @@ export const SequencedTab = styled(Tab)`
 	flex-grow: 1;
 	flex-basis: 0;
 	cursor: ${({ disabled }) => (disabled ? 'default' : 'pointer')};
-	background: ${({ selected }) => (selected ? colors.blueTint : 'white')};
+	background: ${({ selected, theme }) => (selected ? theme.colors.blue1 : theme.colors.white)};
 	height: 54px;
 	border-radius: 0;
 
@@ -147,15 +77,15 @@ export const SequencedTab = styled(Tab)`
 	}
 `;
 
-export const SequencedTabContent = styled.span.attrs(() => ({ tabIndex: -1 }))`
+export const SequencedTabContent = styled(Text).attrs(() => ({ tabIndex: -1 }))`
 	overflow: wrap;
 	min-height: fit-content;
 	display: none;
 	font-size: 14px;
 	font-weight: 600;
 	text-transform: uppercase;
-	color: ${({ selected, disabled }) =>
-		selected ? colors.blueBase : disabled ? colors.gray22 : colors.gray52};
+	color: ${({ selected, disabled, theme }) =>
+		selected ? theme.colors.blue4 : disabled ? theme.colors.gray22 : theme.colors.gray52};
 	padding-right: 16px;
 
 	@media (min-width: ${mediaSizes.phone}) {
@@ -167,13 +97,17 @@ export const SequencedTabContent = styled.span.attrs(() => ({ tabIndex: -1 }))`
 	}
 `;
 
-export const Circle = styled.div`
+export const Circle = styled(Box)`
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	border: solid 2px
-		${({ selected, completed, disabled }) =>
-			selected || completed ? colors.blueLight : disabled ? colors.gray14 : colors.gray34};
+		${({ selected, completed, disabled, theme }) =>
+			selected || completed
+				? theme.colors.blue3
+				: disabled
+				? theme.colors.gray14
+				: theme.colors.gray34};
 	border-radius: 50%;
 	width: 24px;
 	min-width: 24px;
@@ -181,11 +115,83 @@ export const Circle = styled.div`
 	margin: 0px;
 	font-size: 14px;
 	font-weight: bold;
-	color: ${({ selected, disabled }) =>
-		selected ? colors.blueBase : disabled ? colors.gray22 : colors.gray52};
-	background: ${({ completed }) => completed && colors.blueLight};
+	color: ${({ selected, disabled, theme }) =>
+		selected ? theme.colors.blue4 : disabled ? theme.colors.gray22 : theme.colors.gray52};
+	background: ${({ completed, theme }) => completed && theme.colors.blue3};
 
 	@media (min-width: ${mediaSizes.phone}) {
 		margin: 0px 8px 0px 14px;
 	}
+`;
+
+// New variant tabs
+
+const tabVariant = variant({
+	prop: 'variant',
+	scale: 'tab',
+	variants: tabs,
+});
+
+const selectedTabVariant = variant({
+	prop: 'selectedVariant',
+	scale: 'tab',
+	variants: selected,
+});
+
+const tabListVariant = variant({
+	prop: 'variant',
+	scale: 'tab',
+	variants: tabLists,
+});
+
+export const TabCore = styled(UtilityButton).attrs(({ variant, selected, panelId }) => ({
+	selectedVariant: `${variant}-${selected}`,
+
+	role: 'tab',
+	'aria-controls': `panel:${panelId}`,
+	'aria-selected': selected,
+	tabIndex: selected ? 1 : -1,
+}))`
+	position: relative;
+
+	display: block;
+	white-space: nowrap;
+	overflow-x: hidden;
+	text-overflow: ellipsis;
+
+	${tabVariant}
+	${selectedTabVariant}
+	${textStyle};
+
+	${common};
+	${typography};
+	${layout};
+	${position};
+	${border};
+	${background};
+`;
+
+export const TabListCore = styled(Box).attrs({
+	role: 'tablist',
+})`
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+
+	${tabListVariant}
+	${textStyle};
+
+	${common};
+	${layout};
+	${position};
+	${border};
+	${background};
+`;
+
+export const TabPanelsCore = styled(Box)``;
+
+export const TabPanelCore = styled(Box).attrs({
+	role: 'tabpanel',
+})`
+	display: ${({ selected }) => (selected ? 'block' : 'none')};
 `;

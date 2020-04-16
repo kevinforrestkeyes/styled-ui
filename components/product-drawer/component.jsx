@@ -1,10 +1,9 @@
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import { LoadingSpinner } from '../loading-spinner';
 import { PopoverManager, PopoverReference } from '../popover';
 import * as Styled from './styled';
 
-const ProductDrawerDropdown = lazy(() => import('./product-drawer-dropdown'));
+import ProductDrawerDropdown from './product-drawer-dropdown';
 
 export class ProductDrawer extends React.PureComponent {
 	static propTypes = {
@@ -37,7 +36,7 @@ export class ProductDrawer extends React.PureComponent {
 			equipDescription: PropTypes.string.isRequired,
 			comingSoon: PropTypes.string.isRequired,
 			more: PropTypes.string.isRequired,
-			products: PropTypes.string.isRequired,
+			drawerToggleText: PropTypes.string.isRequired,
 			faithlifeStudyBibleLinkTitle: PropTypes.string.isRequired,
 			faithlifeStudyBibleLinkDescription: PropTypes.string.isRequired,
 			givingLinkTitle: PropTypes.string.isRequired,
@@ -49,9 +48,14 @@ export class ProductDrawer extends React.PureComponent {
 		}),
 		styleOverrides: PropTypes.shape({
 			mobileTopOffset: PropTypes.string,
+			tabletRightOffset: PropTypes.string,
 			toggleButtonColor: PropTypes.string,
 			toggleButtonHoverColor: PropTypes.string,
+			toggleTextColor: PropTypes.string,
+			toggleTextFontFamily: PropTypes.string,
+			toggleTextFontSize: PropTypes.string,
 		}),
+		title: PropTypes.string,
 	};
 
 	static defaultProps = {
@@ -113,19 +117,18 @@ export class ProductDrawer extends React.PureComponent {
 								/>
 							</svg>
 							<Styled.ProductDrawerToggleText styleOverrides={styleOverrides}>
-								{resources.products}
+								{resources.drawerToggleText}
 							</Styled.ProductDrawerToggleText>
 						</Styled.ProductDrawerToggle>
 					</PopoverReference>
 					{isOpen ? (
-						<Suspense fallback={<LoadingSpinner />}>
-							<ProductDrawerDropdown
-								isOpen={isOpen}
-								resources={resources}
-								styleOverrides={styleOverrides}
-								handleCloseButtonClick={this.handleCloseButtonClick}
-							/>
-						</Suspense>
+						<ProductDrawerDropdown
+							isOpen={isOpen}
+							resources={resources}
+							styleOverrides={styleOverrides}
+							handleCloseButtonClick={this.handleCloseButtonClick}
+							handleBlur={this.handleBlur}
+						/>
 					) : null}
 				</PopoverManager>
 			</Styled.ProductDrawer>

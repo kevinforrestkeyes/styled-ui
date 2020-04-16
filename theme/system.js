@@ -1,4 +1,3 @@
-import { css } from 'styled-components';
 import * as styledSystem from 'styled-system';
 import PropTypes from 'prop-types';
 import systemPropTypes from '@styled-system/prop-types';
@@ -19,6 +18,7 @@ export const common = compose(
 	styledSystem.color,
 	styledSystem.display,
 	styledSystem.system({
+		pointerEvents: true,
 		transform: true,
 		transition: true,
 	}),
@@ -37,6 +37,7 @@ export const typography = compose(
 	styledSystem.system({
 		textTransform: true,
 		whiteSpace: true,
+		textOverflow: true,
 	}),
 );
 

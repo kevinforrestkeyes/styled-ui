@@ -1,8 +1,8 @@
 /* eslint-disable react/jsx-indent */
 import React from 'react';
 import ReactDOM from 'react-dom';
-import PropTypes from 'prop-types';
 import styled from 'styled-components';
+import ResizeObserver from 'resize-observer-polyfill';
 import { Catalog, pageLoader } from 'catalog';
 import * as dateFunctions from 'date-fns';
 import chrono from 'chrono-node';
@@ -11,6 +11,7 @@ import {
 	AnchorButton,
 	Bootstrap,
 	Button,
+	UtilityButton,
 	Checkbox,
 	Collapse,
 	DropZone,
@@ -60,23 +61,72 @@ import {
 	Stack,
 	Text,
 	Paragraph,
+	Heading,
+	AutoSizedRowMasonry,
+	Switch,
 	theme,
 } from '../index';
+import { Modal as V6Modal, Button as V6Button, SegmentedButtonGroup } from '../index-v6';
 import { GroupSelector, LargeGroupSelector } from '../components/group-selector';
 import { ShareDialog } from '../components/share-dialog';
 import { GearIcon } from '../components/icons';
 import { colors } from '../components/shared-styles';
+import censusData from './grid/2010census.json';
 import { ProductDrawerWithResources } from './product-drawer';
 import { DocgenTable } from './docgen-table';
-import { MemberDirectory, VolunteerScheduling } from './grid';
-import { textInputPages } from './text-input/pages';
-import DownArrow from './svgs/arrow-down.svg';
+import { textInputPages } from './input/pages';
+import { PopulationChange } from './grid/population-change';
+import { IncrementButton } from './grid/cell-editors';
+import { BaseGrid } from '../components/grid/base-grid';
+import { SimpleGrid, GridColumn, PaginatedGrid, TreeGrid } from '../components/grid';
+import { IconGroup } from './icon-table';
+import { FavoriteFilled } from '../components/icons/18px';
+import { ChevronDown } from '../components/icons/12px';
 
 // SVG icons embedded in SASS stylesheets do not work properly with catalog,
 // so the stylesheets must be built by a separate webpack build.
 import '../dist/main.css';
 import '../dist/text-input.css';
 import '../dist/ag-grid.css';
+
+window.ResizeObserver = ResizeObserver;
+
+const censusDataWithId = censusData.map((data, index) => ({
+	...data,
+	id: index,
+}));
+
+const censusDataFolders = censusData.reduce((list, row, index) => {
+	const subFolderName = row.population > 100000 ? 'Pop more than 100k' : 'Pop less than 100k';
+	const folder = list.find(x => x.value === row.areaDesc);
+
+	if (folder) {
+		const subFolder = folder.children.find(x => x.value === subFolderName);
+		if (subFolder) {
+			subFolder.children.push({ id: `${index}`, ...row });
+		} else {
+			folder.children.push({
+				id: `${row.areaDesc}:${subFolderName}`,
+				value: subFolderName,
+				children: [{ id: `${index}`, ...row }],
+			});
+		}
+	} else {
+		list.push({
+			id: `${row.areaDesc}`,
+			value: row.areaDesc,
+			children: [
+				{
+					id: `${row.areaDesc}:${subFolderName}`,
+					value: subFolderName,
+					children: [{ id: `${index}`, ...row }],
+				},
+			],
+		});
+	}
+
+	return list;
+}, []);
 
 const ButtonDemo = styled.div`
 	display: inline-grid;
@@ -92,15 +142,6 @@ const ButtonGrid = styled.div`
 	width: 200px;
 `;
 
-const AccordionIndicatorDemo = ({ isExpanded, onExpansion }) => (
-	<input type="checkbox" checked={isExpanded} onChange={onExpansion} tabIndex={-1} />
-);
-
-AccordionIndicatorDemo.propTypes = {
-	isExpanded: PropTypes.bool,
-	onExpansion: PropTypes.func,
-};
-
 const FormDemo = styled.form`
 	display: inline-grid;
 	grid-auto-flow: row;
@@ -115,7 +156,25 @@ const ThemeList = ({ items, render }) => {
 	return <>{[...Object.entries(items(theme))].map(render)}</>;
 };
 
-const components = [
+const pages = [
+	{
+		path: '/',
+		title: 'Welcome',
+		content: pageLoader(() => import('./WELCOME.md')),
+	},
+	{
+		path: '/theme',
+		title: 'Theme',
+		content: pageLoader(() => import('./theme/documentation.md')),
+		imports: {
+			Box,
+			Stack,
+			Text,
+			Paragraph,
+			Heading,
+			ThemeList,
+		},
+	},
 	{
 		title: 'Layout Primitives',
 		pages: [
@@ -134,6 +193,8 @@ const components = [
 				imports: {
 					Box,
 					Stack,
+					Paragraph,
+					Text,
 				},
 			},
 			{
@@ -145,7 +206,28 @@ const components = [
 					Stack,
 					Text,
 					Paragraph,
+					Heading,
 					ThemeList,
+				},
+			},
+		],
+	},
+	{
+		path: '/icons',
+		title: 'Icons',
+		content: pageLoader(() => import('./design-styles/icons.md')),
+		imports: { IconGroup, FavoriteFilled, Box },
+	},
+	{
+		title: 'Row Masonry',
+		pages: [
+			{
+				path: '/row-masonry',
+				title: 'Row Masonry',
+				content: pageLoader(() => import('./row-masonry/documentation.md')),
+				imports: {
+					Box,
+					AutoSizedRowMasonry,
 				},
 			},
 		],
@@ -163,10 +245,10 @@ const components = [
 						background: #fff;
 						border: 16px solid #f2f2f2;
 					`,
-					AccordionCustomIndicator: AccordionIndicatorDemo,
 					Checkbox,
 					Form: FormDemo,
 					Input,
+					Switch,
 				},
 			},
 			{
@@ -174,36 +256,6 @@ const components = [
 				title: 'Accordion Documentation',
 				content: pageLoader(() => import('./accordion/documentation.md')),
 				imports: { Accordion, DocgenTable },
-			},
-		],
-	},
-	{
-		title: 'Bootstrap',
-		pages: [
-			{
-				path: '/bootstrap/components',
-				title: 'Standard Components',
-				content: pageLoader(() => import('./bootstrap/components.md')),
-				imports: {
-					...Bootstrap,
-					RowWithMargin: styled(Bootstrap.Row)`
-						margin-bottom: 1rem;
-					`,
-					LayoutGridDemo: styled.div`
-						.container .row > [class^='col'] {
-							padding-top: 0.75rem;
-							padding-bottom: 0.75rem;
-							background-color: #e5edf5;
-							border: 1px solid #c9c1d5;
-							color: #5f5f5f;
-						}
-					`,
-				},
-			},
-			{
-				path: '/bootstrap/stylesheet',
-				title: 'Stylesheet',
-				content: pageLoader(() => import('./bootstrap/stylesheet.md')),
 			},
 		],
 	},
@@ -220,6 +272,29 @@ const components = [
 					ButtonGrid,
 					GearIcon,
 					buttonRef: React.createRef(),
+				},
+			},
+			{
+				path: '/button/variationsv6',
+				title: 'Button Variations v6',
+				content: pageLoader(() => import('./button/variations-v6.md')),
+				imports: {
+					Button: V6Button,
+					SegmentedButtonGroup,
+					ButtonDemo,
+					ButtonGrid,
+					GearIcon,
+					buttonRef: React.createRef(),
+				},
+			},
+			{
+				path: '/button/utility-button',
+				title: 'Utility Button',
+				content: pageLoader(() => import('./button/utility-button.md')),
+				imports: {
+					UtilityButton,
+					Box,
+					Text,
 				},
 			},
 			{
@@ -274,30 +349,6 @@ const components = [
 		],
 	},
 	{
-		title: 'Radio',
-		pages: [
-			{
-				path: '/radio/variations',
-				title: 'Radio Variations',
-				content: pageLoader(() => import('./radio/variations.md')),
-				imports: {
-					Radio,
-					RadioDemo: styled.div`
-						&& > * {
-							margin: 8px;
-						}
-					`,
-				},
-			},
-			{
-				path: '/radio/documentation',
-				title: 'Radio Documentation',
-				content: pageLoader(() => import('./radio/documentation.md')),
-				imports: { Radio, DocgenTable },
-			},
-		],
-	},
-	{
 		title: 'Collapse',
 		pages: [
 			{
@@ -311,323 +362,6 @@ const components = [
 				title: 'Collapse Documentation',
 				content: pageLoader(() => import('./collapse/documentation.md')),
 				imports: { Collapse, DocgenTable },
-			},
-		],
-	},
-	{
-		title: 'Grid',
-		pages: [
-			{
-				title: 'Variations',
-				path: '/grid/variations',
-				content: pageLoader(() => import('./grid/variations.md')),
-				imports: { MemberDirectory, VolunteerScheduling },
-			},
-			{
-				title: 'Documentation',
-				path: '/grid/documentation',
-				content: pageLoader(() => import('./grid/documentation.md')),
-			},
-		],
-	},
-	{
-		title: 'Group Selector',
-		pages: [
-			{
-				path: '/group-selector/variations',
-				title: 'Group Selector Variations',
-				content: pageLoader(() => import('./group-selector/variations.md')),
-				imports: {
-					GroupSelector,
-					Button,
-					GroupSelectorDemo: styled.div`
-						.wide-content {
-							width: 600px;
-						}
-
-						.button-container {
-							margin-right: 16px;
-						}
-
-						.stacked-content {
-							width: 240px;
-						}
-					`,
-					LargeGroupSelector,
-					LargeGroupSelectorDemo: styled.div`
-						.wide-content {
-							width: 600px;
-						}
-
-						.button-container {
-							margin-right: 16px;
-						}
-
-						.stacked-content {
-							width: 240px;
-						}
-					`,
-				},
-			},
-			{
-				path: '/group-selector/documentation',
-				title: 'Group Selector Documentation',
-				content: pageLoader(() => import('./group-selector/documentation.md')),
-				imports: { GroupSelector, LargeGroupSelector, DocgenTable },
-			},
-		],
-	},
-	{
-		title: 'Help Box',
-		pages: [
-			{
-				path: '/help-box/variations',
-				title: 'Help Box Variations',
-				content: pageLoader(() => import('./help-box/variations.md')),
-				imports: {
-					HelpBox,
-					Button,
-				},
-			},
-			{
-				path: '/help-box/documentation',
-				title: 'Help Box Documentation',
-				content: pageLoader(() => import('./help-box/documentation.md')),
-				imports: { HelpBox, DocgenTable },
-			},
-		],
-	},
-	{
-		title: 'Loading Spinner',
-		pages: [
-			{
-				path: '/loading-spinner/variations',
-				title: 'Loading Spinner Variations',
-				content: pageLoader(() => import('./loading-spinner/variations.md')),
-				imports: { LoadingSpinner },
-			},
-			{
-				path: '/loading-spinner/documentation',
-				title: 'Loading Spinner Documentation',
-				content: pageLoader(() => import('./loading-spinner/documentation.md')),
-				imports: { LoadingSpinner, DocgenTable },
-			},
-		],
-	},
-	{
-		title: 'Modal',
-		pages: [
-			{
-				path: '/modal/variations',
-				title: 'Modal Variations',
-				content: pageLoader(() => import('./modal/variations.md')),
-				imports: {
-					Input,
-					Modal,
-					ModalContent,
-					ModalFooter,
-					Button,
-					delayPromise,
-					ModalDemoWideContent: styled.div`
-						width: 600px;
-					`,
-					ModalDemoButtonContainer: styled.div`
-						margin-right: 16px;
-					`,
-					ModalDemoStackedContent: styled.div`
-						width: 240px;
-					`,
-				},
-			},
-			{
-				path: '/modal/documentation',
-				title: 'Modal Documentation',
-				content: pageLoader(() => import('./modal/documentation.md')),
-				imports: { Modal, ModalContent, DocgenTable },
-			},
-		],
-	},
-	{
-		title: 'Simple Modal',
-		pages: [
-			{
-				path: '/simple-modal/variations',
-				title: 'Simple Modal Variations',
-				content: pageLoader(() => import('./simple-modal/variations.md')),
-				imports: {
-					SimpleModal,
-					Button,
-					Popover,
-					PopoverManager,
-					PopoverReference,
-					SimpleModalDemoModalContent: styled.div`
-						margin-top: 20px;
-						margin-bottom: 20px;
-						width: 300px;
-						height: 200px;
-						display: flex;
-						flex-direction: column;
-						align-items: center;
-						justify-content: space-around;
-					`,
-					SimpleModalDemoMessage: styled.div`
-						background-color: #eeeeee;
-						padding: 20px;
-					`,
-					SimpleModalDemoSuccess: styled.div`
-						width: 60px;
-					`,
-				},
-			},
-			{
-				path: '/simple-modal/documentation',
-				title: 'SimpleModal Documentation',
-				content: pageLoader(() => import('./simple-modal/documentation.md')),
-				imports: { SimpleModal, DocgenTable },
-			},
-		],
-	},
-	textInputPages,
-	{
-		title: 'Files Section',
-		pages: [
-			{
-				path: '/files-section/variations',
-				title: 'Files Section Variations',
-				content: pageLoader(() => import('./files-section/variations.md')),
-				imports: {
-					FilesSection,
-					Button,
-					LoadingSpinner,
-				},
-			},
-			{
-				path: 'files-section/documentation',
-				title: 'Files Section Documentation',
-				content: pageLoader(() => import('./files-section/documentation.md')),
-				imports: { FilesSection, DocgenTable },
-			},
-		],
-	},
-	{
-		title: 'Drop Zone',
-		pages: [
-			{
-				path: '/drop-zone/variations',
-				title: 'Drop Zone Variations',
-				content: pageLoader(() => import('./drop-zone/variations.md')),
-				imports: {
-					DropZone,
-					DroppedFiles: styled.div`
-						margin-top: 16px;
-					`,
-					DropZoneMessage: styled.div`
-						font-size: 20px;
-						max-width: 240px;
-						text-align: center;
-					`,
-					IconsContainer: styled.div`
-						color: #a8a8a8;
-
-						> * {
-							margin: 0 12px;
-						}
-					`,
-				},
-			},
-			{
-				path: 'drop-zone/documentation',
-				title: 'Drop Zone Documentation',
-				content: pageLoader(() => import('./drop-zone/documentation.md')),
-				imports: { DropZone, DocgenTable },
-			},
-		],
-	},
-	{
-		title: 'Design Styles',
-		pages: [
-			{
-				path: '/design-styles/colors',
-				title: 'Colors',
-				content: pageLoader(() => import('./design-styles/colors.md')),
-			},
-		],
-	},
-	{
-		title: 'Share Dialog',
-		pages: [
-			{
-				path: '/share-dialog/variations',
-				title: 'Share Dialog Variations',
-				content: pageLoader(() => import('./share-dialog/variations.md')),
-				imports: {
-					Input,
-					Modal,
-					ModalFooter,
-					Button,
-					delayPromise,
-					ShareDialog,
-					ModalDemo: styled.div`
-						.wide-content {
-							width: 600px;
-						}
-
-						.button-container {
-							margin-right: 16px;
-						}
-
-						.stacked-content {
-							width: 240px;
-						}
-					`,
-				},
-			},
-			{
-				path: 'share-dialog/documentation',
-				title: 'Share Dialog Documentation',
-				content: pageLoader(() => import('./share-dialog/documentation.md')),
-				imports: { ShareDialog, DocgenTable },
-			},
-		],
-	},
-	{
-		title: 'Popover',
-		pages: [
-			{
-				path: '/popover/variations',
-				title: 'Popover Variations',
-				content: pageLoader(() => import('./popover/variations.md')),
-				imports: {
-					Button,
-					Popover,
-					PopoverBase,
-					Tooltip,
-					PopoverManager,
-					PopoverReference,
-					PopoverDemo: styled.div`
-						display: flex;
-						align-items: flex-start;
-						justify-content: space-between;
-					`,
-					PopoverOverflowDemo: styled.div`
-						display: flex;
-						align-items: flex-start;
-						justify-content: space-around;
-						position: relative;
-						overflow: hidden;
-						padding-top: 20px;
-					`,
-					StyledDiv: styled.div`
-						font-weight: bold;
-						color: purple;
-					`,
-				},
-			},
-			{
-				path: '/popover/documentation',
-				title: 'Popover Documentation',
-				content: pageLoader(() => import('./popover/documentation.md')),
-				imports: { Popover, PopoverBase, DocgenTable, Tooltip, PopoverManager },
 			},
 		],
 	},
@@ -693,126 +427,36 @@ const components = [
 		],
 	},
 	{
-		title: 'Slider',
+		title: 'Drop Zone',
 		pages: [
 			{
-				path: '/slider/variations',
-				title: 'Slider Variations',
-				content: pageLoader(() => import('./slider/variations.md')),
+				path: '/drop-zone/variations',
+				title: 'Drop Zone Variations',
+				content: pageLoader(() => import('./drop-zone/variations.md')),
 				imports: {
-					Slider,
-					DocgenTable,
-				},
-			},
-			{
-				path: 'slider/documentation',
-				title: 'Slider Documentation',
-				content: pageLoader(() => import('./slider/documentation.md')),
-				imports: { Slider, DocgenTable },
-			},
-		],
-	},
-	{
-		title: 'Simple Toast',
-		pages: [
-			{
-				path: '/simple-toast/variations',
-				title: 'Simple Toast Variations',
-				content: pageLoader(() => import('./simple-toast/variations.md')),
-				imports: {
-					Button,
-					ToastDemo: styled.div`
-						&& > * {
-							margin: 8px;
-						}
+					DropZone,
+					DroppedFiles: styled.div`
+						margin-top: 16px;
 					`,
-					SimpleToast,
-					LoadingSpinner,
-					toastRef: React.createRef(),
-				},
-			},
-			{
-				path: '/simple-toast/documentation',
-				title: 'Simple Toast Documentation',
-				content: pageLoader(() => import('./simple-toast/documentation.md')),
-				imports: { SimpleToast, DocgenTable },
-			},
-		],
-	},
-	{
-		title: 'Product Drawer',
-		pages: [
-			{
-				path: '/product-drawer/variations',
-				title: 'Product Drawer',
-				content: pageLoader(() => import('./product-drawer/variations.md')),
-				imports: { ProductDrawerWithResources },
-			},
-			{
-				path: '/product-drawer/documentation',
-				title: 'Product Drawer Documentation',
-				content: pageLoader(() => import('./product-drawer/documentation.md')),
-				imports: { ProductDrawerWithResources, DocgenTable },
-			},
-		],
-	},
-	{
-		title: 'Tabs',
-		pages: [
-			{
-				path: '/tabs/variations',
-				title: 'Tabs Variations',
-				content: pageLoader(() => import('./tabs/variations.md')),
-				imports: {
-					TabManager,
-					Tab,
-					TabList,
-					TabPanel,
-					TabPanels,
-					TabDemo: styled.div`
-						padding: 8px;
-						background-color: white;
+					DropZoneMessage: styled.div`
+						font-size: 20px;
+						max-width: 240px;
+						text-align: center;
+					`,
+					IconsContainer: styled.div`
+						color: #a8a8a8;
 
-						&& > * {
-							margin: 16px;
+						> * {
+							margin: 0 12px;
 						}
 					`,
-					Button,
-					createPortal: component => ReactDOM.createPortal(component, document.body),
 				},
 			},
 			{
-				path: '/tabs/sequenced-tabs',
-				title: 'Sequenced Tabs',
-				content: pageLoader(() => import('./tabs/sequenced-tabs.md')),
-				imports: {
-					TabManager,
-					SequencedTab,
-					SequencedTabList,
-					TabPanels,
-					TabPanel,
-					TabDemo: styled.div`
-						padding: 8px;
-						background-color: white;
-
-						&& > * {
-							margin: 16px;
-						}
-					`,
-					Button,
-					createPortal: component => ReactDOM.createPortal(component, document.body),
-				},
-			},
-			{
-				path: '/tabs/documentation',
-				title: 'Tabs Documentation',
-				content: pageLoader(() => import('./tabs/documentation.md')),
-				imports: {
-					Tab,
-					SequencedTab,
-					TabManager,
-					DocgenTable,
-				},
+				path: 'drop-zone/documentation',
+				title: 'Drop Zone Documentation',
+				content: pageLoader(() => import('./drop-zone/documentation.md')),
+				imports: { DropZone, DocgenTable },
 			},
 		],
 	},
@@ -853,6 +497,48 @@ const components = [
 		],
 	},
 	{
+		title: 'Files Section',
+		pages: [
+			{
+				path: '/files-section/variations',
+				title: 'Files Section Variations',
+				content: pageLoader(() => import('./files-section/variations.md')),
+				imports: {
+					FilesSection,
+					Button,
+					LoadingSpinner,
+				},
+			},
+			{
+				path: 'files-section/documentation',
+				title: 'Files Section Documentation',
+				content: pageLoader(() => import('./files-section/documentation.md')),
+				imports: { FilesSection, DocgenTable },
+			},
+		],
+	},
+	{
+		title: 'Help Box',
+		pages: [
+			{
+				path: '/help-box/variations',
+				title: 'Help Box Variations',
+				content: pageLoader(() => import('./help-box/variations.md')),
+				imports: {
+					HelpBox,
+					Button,
+				},
+			},
+			{
+				path: '/help-box/documentation',
+				title: 'Help Box Documentation',
+				content: pageLoader(() => import('./help-box/documentation.md')),
+				imports: { HelpBox, DocgenTable },
+			},
+		],
+	},
+	textInputPages,
+	{
 		title: 'Listbox',
 		pages: [
 			{
@@ -873,7 +559,7 @@ const components = [
 					Label: styled.span`
 						margin-right: 8px;
 					`,
-					DownArrow: styled.img.attrs({ src: DownArrow })``,
+					ChevronDown,
 				},
 			},
 			{
@@ -881,6 +567,108 @@ const components = [
 				title: 'Listbox Documentation',
 				content: pageLoader(() => import('./listbox/documentation.md')),
 				imports: { Listbox, ListboxToggle, ListItem, DocgenTable },
+			},
+		],
+	},
+	{
+		title: 'Loading Spinner',
+		pages: [
+			{
+				path: '/loading-spinner/variations',
+				title: 'Loading Spinner Variations',
+				content: pageLoader(() => import('./loading-spinner/variations.md')),
+				imports: { LoadingSpinner },
+			},
+			{
+				path: '/loading-spinner/documentation',
+				title: 'Loading Spinner Documentation',
+				content: pageLoader(() => import('./loading-spinner/documentation.md')),
+				imports: { LoadingSpinner, DocgenTable },
+			},
+		],
+	},
+	{
+		title: 'Modal',
+		pages: [
+			{
+				path: '/modal/variations',
+				title: 'Modal Variations',
+				content: pageLoader(() => import('./modal/variations.md')),
+				imports: {
+					Input,
+					Modal,
+					ModalContent,
+					ModalFooter,
+					Button,
+					delayPromise,
+					ModalDemoWideContent: styled.div`
+						width: 600px;
+					`,
+					ModalDemoButtonContainer: styled.div`
+						margin-right: 16px;
+					`,
+					ModalDemoStackedContent: styled.div`
+						width: 240px;
+					`,
+				},
+			},
+			{
+				path: '/modal/documentation',
+				title: 'Modal Documentation',
+				content: pageLoader(() => import('./modal/documentation.md')),
+				imports: { Modal, ModalContent, DocgenTable },
+			},
+			{
+				path: '/modal/v6',
+				title: 'v6 Modal Examples',
+				content: pageLoader(() => import('./modal/variations-v6.md')),
+				imports: {
+					Modal: V6Modal,
+					Box,
+					Input,
+					Button: V6Button,
+				},
+			},
+			{
+				path: '/modal/documentation/v6',
+				title: 'v6 Modal Documentation',
+				content: pageLoader(() => import('./modal/documentation-v6.md')),
+				imports: { Modal: V6Modal, DocgenTable },
+			},
+			{
+				path: '/simple-modal/variations',
+				title: 'Simple Modal Variations',
+				content: pageLoader(() => import('./simple-modal/variations.md')),
+				imports: {
+					SimpleModal,
+					Button,
+					Popover,
+					PopoverManager,
+					PopoverReference,
+					SimpleModalDemoModalContent: styled.div`
+						margin-top: 20px;
+						margin-bottom: 20px;
+						width: 300px;
+						height: 200px;
+						display: flex;
+						flex-direction: column;
+						align-items: center;
+						justify-content: space-around;
+					`,
+					SimpleModalDemoMessage: styled.div`
+						background-color: #eeeeee;
+						padding: 20px;
+					`,
+					SimpleModalDemoSuccess: styled.div`
+						width: 60px;
+					`,
+				},
+			},
+			{
+				path: '/simple-modal/documentation',
+				title: 'SimpleModal Documentation',
+				content: pageLoader(() => import('./simple-modal/documentation.md')),
+				imports: { SimpleModal, DocgenTable },
 			},
 		],
 	},
@@ -925,17 +713,256 @@ const components = [
 		],
 	},
 	{
-		title: 'File Picker',
+		title: 'Popover',
 		pages: [
+			{
+				path: '/popover/variations',
+				title: 'Popover Variations',
+				content: pageLoader(() => import('./popover/variations.md')),
+				imports: {
+					Button,
+					Popover,
+					PopoverBase,
+					Tooltip,
+					PopoverManager,
+					PopoverReference,
+					PopoverDemo: styled.div`
+						display: flex;
+						align-items: flex-start;
+						justify-content: space-between;
+					`,
+					PopoverOverflowDemo: styled.div`
+						display: flex;
+						align-items: flex-start;
+						justify-content: space-around;
+						position: relative;
+						overflow: hidden;
+						padding-top: 20px;
+					`,
+					StyledDiv: styled.div`
+						font-weight: bold;
+						color: purple;
+					`,
+				},
+			},
+			{
+				path: '/popover/documentation',
+				title: 'Popover Documentation',
+				content: pageLoader(() => import('./popover/documentation.md')),
+				imports: { Popover, PopoverBase, DocgenTable, Tooltip, PopoverManager },
+			},
+		],
+	},
+	{
+		title: 'Radio',
+		pages: [
+			{
+				path: '/radio/variations',
+				title: 'Radio Variations',
+				content: pageLoader(() => import('./radio/variations.md')),
+				imports: {
+					Radio,
+					RadioDemo: styled.div`
+						&& > * {
+							margin: 8px;
+						}
+					`,
+				},
+			},
+			{
+				path: '/radio/documentation',
+				title: 'Radio Documentation',
+				content: pageLoader(() => import('./radio/documentation.md')),
+				imports: { Radio, DocgenTable },
+			},
+		],
+	},
+	{
+		title: 'Share Dialog',
+		pages: [
+			{
+				path: '/share-dialog/variations',
+				title: 'Share Dialog Variations',
+				content: pageLoader(() => import('./share-dialog/variations.md')),
+				imports: {
+					Input,
+					Modal,
+					ModalFooter,
+					Button,
+					delayPromise,
+					ShareDialog,
+					ModalDemo: styled.div`
+						.wide-content {
+							width: 600px;
+						}
+
+						.button-container {
+							margin-right: 16px;
+						}
+
+						.stacked-content {
+							width: 240px;
+						}
+					`,
+				},
+			},
+			{
+				path: 'share-dialog/documentation',
+				title: 'Share Dialog Documentation',
+				content: pageLoader(() => import('./share-dialog/documentation.md')),
+				imports: { ShareDialog, DocgenTable },
+			},
+		],
+	},
+	{
+		title: 'Simple Toast',
+		pages: [
+			{
+				path: '/simple-toast/variations',
+				title: 'Simple Toast Variations',
+				content: pageLoader(() => import('./simple-toast/variations.md')),
+				imports: {
+					Button,
+					ToastDemo: styled.div`
+						&& > * {
+							margin: 8px;
+						}
+					`,
+					SimpleToast,
+					LoadingSpinner,
+					toastRef: React.createRef(),
+				},
+			},
+			{
+				path: '/simple-toast/documentation',
+				title: 'Simple Toast Documentation',
+				content: pageLoader(() => import('./simple-toast/documentation.md')),
+				imports: { SimpleToast, DocgenTable },
+			},
+		],
+	},
+	{
+		title: 'Slider',
+		pages: [
+			{
+				path: '/slider/variations',
+				title: 'Slider Variations',
+				content: pageLoader(() => import('./slider/variations.md')),
+				imports: {
+					Slider,
+					DocgenTable,
+				},
+			},
+			{
+				path: 'slider/documentation',
+				title: 'Slider Documentation',
+				content: pageLoader(() => import('./slider/documentation.md')),
+				imports: { Slider, DocgenTable },
+			},
+		],
+	},
+	{
+		path: '/Switch/variations',
+		title: 'Switch',
+		content: pageLoader(() => import('./switch/variations.md')),
+		imports: {
+			Switch,
+		},
+	},
+	{
+		title: 'Tabs',
+		pages: [
+			{
+				path: '/tabs/variations',
+				title: 'Tabs Variations',
+				content: pageLoader(() => import('./tabs/variations.md')),
+				imports: {
+					Paragraph,
+					TabManager,
+					Tab,
+					TabList,
+					TabPanel,
+					TabPanels,
+					TabDemo: styled(Stack)`
+						padding: 16px;
+						background-color: white;
+					`,
+					Button,
+					createPortal: component => ReactDOM.createPortal(component, document.body),
+				},
+			},
+			{
+				path: '/tabs/sequenced-tabs',
+				title: 'Sequenced Tabs',
+				content: pageLoader(() => import('./tabs/sequenced-tabs.md')),
+				imports: {
+					TabManager,
+					SequencedTab,
+					SequencedTabList,
+					TabPanels,
+					TabPanel,
+					TabDemo: styled.div`
+						padding: 8px;
+						background-color: white;
+
+						&& > * {
+							margin: 16px;
+						}
+					`,
+					Button,
+					createPortal: component => ReactDOM.createPortal(component, document.body),
+				},
+			},
+			{
+				path: '/tabs/documentation',
+				title: 'Tabs Documentation',
+				content: pageLoader(() => import('./tabs/documentation.md')),
+				imports: {
+					Tab,
+					SequencedTab,
+					TabManager,
+					DocgenTable,
+				},
+			},
+		],
+	},
+	{
+		title: 'Deprecated',
+		pages: [
+			{
+				path: '/bootstrap/components',
+				title: 'Bootstrap Components',
+				content: pageLoader(() => import('./bootstrap/components.md')),
+				imports: {
+					...Bootstrap,
+					RowWithMargin: styled(Bootstrap.Row)`
+						margin-bottom: 1rem;
+					`,
+					LayoutGridDemo: styled.div`
+						.container .row > [class^='col'] {
+							padding-top: 0.75rem;
+							padding-bottom: 0.75rem;
+							background-color: #e5edf5;
+							border: 1px solid #c9c1d5;
+							color: #5f5f5f;
+						}
+					`,
+				},
+			},
+			{
+				path: '/bootstrap/stylesheet',
+				title: 'Bootstrap Stylesheet',
+				content: pageLoader(() => import('./bootstrap/stylesheet.md')),
+			},
 			{
 				path: '/file-picker/variations',
 				title: 'File Picker',
 				content: pageLoader(() => import('./file-picker/variations.md')),
 				imports: {
+					Box,
+					Button,
+					Modal: V6Modal,
 					FilePicker,
-					FilePickerDemo: styled.div`
-						height: 600px;
-					`,
 					TabManager,
 					TabList,
 					Tab,
@@ -951,25 +978,93 @@ const components = [
 				content: pageLoader(() => import('./file-picker/documentation.md')),
 				imports: { FilePicker, AmberContent, DocgenTable },
 			},
+			{
+				path: '/group-selector/variations',
+				title: 'Group Selector Variations',
+				content: pageLoader(() => import('./group-selector/variations.md')),
+				imports: {
+					GroupSelector,
+					Button,
+					GroupSelectorDemo: styled.div`
+						.wide-content {
+							width: 600px;
+						}
+
+						.button-container {
+							margin-right: 16px;
+						}
+
+						.stacked-content {
+							width: 240px;
+						}
+					`,
+					LargeGroupSelector,
+					LargeGroupSelectorDemo: styled.div`
+						.wide-content {
+							width: 600px;
+						}
+
+						.button-container {
+							margin-right: 16px;
+						}
+
+						.stacked-content {
+							width: 240px;
+						}
+					`,
+				},
+			},
+			{
+				path: '/group-selector/documentation',
+				title: 'Group Selector Documentation',
+				content: pageLoader(() => import('./group-selector/documentation.md')),
+				imports: { GroupSelector, LargeGroupSelector, DocgenTable },
+			},
+			{
+				path: '/product-drawer/variations',
+				title: 'Product Drawer',
+				content: pageLoader(() => import('./product-drawer/variations.md')),
+				imports: { ProductDrawerWithResources },
+			},
+			{
+				title: 'Grid Variations',
+				path: '/grid/variations',
+				content: pageLoader(() => import('./grid/variations.md')),
+				imports: {
+					GridColumn,
+					PaginatedGrid,
+					SimpleGrid,
+					TreeGrid,
+					Button,
+					censusData: censusDataWithId,
+					censusDataFolders,
+				},
+			},
+			{
+				title: 'Grid Examples',
+				path: '/grid/simple-examples',
+				content: pageLoader(() => import('./grid/examples.md')),
+				imports: {
+					GridColumn,
+					SimpleGrid,
+					Input,
+					PopulationChange,
+					Button,
+					censusData: censusDataWithId,
+					censusDataFolders,
+					TreeGrid,
+					gridRef: React.createRef(),
+					IncrementButton,
+				},
+			},
+			{
+				title: 'Grid Documentation',
+				path: '/grid/documentation',
+				content: pageLoader(() => import('./grid/documentation.md')),
+				imports: { DocgenTable, GridColumn, SimpleGrid, BaseGrid, PaginatedGrid, TreeGrid },
+			},
 		],
 	},
-].sort((a, b) => {
-	if (a.title < b.title) {
-		return -1;
-	}
-	if (a.title > b.title) {
-		return 1;
-	}
-	return 0;
-});
-
-const pages = [
-	{
-		path: '/',
-		title: 'Welcome',
-		content: pageLoader(() => import('./WELCOME.md')),
-	},
-	...components,
 ];
 
 ReactDOM.render(

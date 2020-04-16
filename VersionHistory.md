@@ -1,5 +1,361 @@
 # Changelog
 
+### 5.51.5
+
+- Remove hack checking for styled system theme in legacy `Button`.
+
+### 5.51.4
+
+- Fix icons export.
+
+### 5.51.3
+
+- Remove uses of `ThemeProvider` in `Radio`, `Checkbox`, and `MenuCheckbox` components, allowing use of the styled-system theme in children of those components.
+
+### 5.51.2
+
+- Fix `DatePicker` and `DatePeriodPicker` popover bug. [#324](https://github.com/Faithlife/styled-ui/pull/324)
+
+### 5.51.1
+
+- Fix `Select` clipping text when certain CSS resets were used.
+
+### 5.51.0
+
+- Add `page` variant to tabs as alternative to standard `modal` variant.
+
+### 5.50.2
+
+- Restore `Slider` thumb alignment to how it was before unintended changes in v5.46.1.
+
+### 5.50.1
+
+- Fix icons export.
+
+### 5.50.0
+
+- Export an icon set.
+
+### 5.49.0
+
+- Add deprecation notice to `Grid` component. `@faithlife/equipment-grid` is now available from the [FaithlifeEquipment](https://git.faithlife.dev/Logos/FaithlifeEquipment) repo.
+
+### 5.48.0
+
+- Adjust minimal accordion header style.
+- Remove padding top from minimal accordion panels.
+- Close `DatePickerInput` after a date is selected.
+- Right align `NumberInput`s.
+- Update `DropZone` borders.
+
+### 5.47.0
+
+- Port `LoadingSpinner` to styled system, avoiding unnecessary styled components creations.
+
+### 5.46.1
+
+- Create fewer elements in `Slider`.
+
+### 5.46.0
+
+- Add `mountOnEnter` and `unmountOnExit` props to `Accordion`.
+- Memoize `Input` and `NumberInput`.
+
+### 5.45.0
+
+- Allow use with `styled-components@^5`.
+
+### 5.44.2
+
+- Fix crash when using `AsyncSelect` and `AsyncCreatableSelect`.
+
+### 5.44.1
+
+- Fix hook dependencies in useFocusAwayHandler.
+
+### 5.44.0
+
+- Add support for `textStyle` prop to `UtilityButton`.
+- Forward event object to `MenuItem` `onClick` callback.
+
+### 5.43.0
+
+- Hide browser-specific validation styling on `Input`.
+
+### 5.42.2
+
+- Fix `NumberInput` not properly respecting `disabled` attribute.
+
+### 5.42.1
+
+- Export `reactSelectComponents` for real.
+
+### 5.42.0
+
+- Expose `reactSelectComponents` from `ReactSelect` to help with the creation of custom `Option` and `Input` components.
+
+### 5.41.1
+
+- Temporarily downgrade react-select back to version 2, until we are able to address problems with ReactJS.NET server-side rendering.
+
+### 5.41.0
+
+- Upgrade react-select to version 3, improving SSR support for select components.
+
+### 5.40.2
+
+- Fix rendering bugs in`Slider` causing the right edge to be clipped under certain circumstances.
+- Fix popover arrow styling.
+
+### 5.40.1
+
+- Fix bug where `step` prop was not forwarded by `NumberInput`.
+
+### 5.40.0
+
+- Add `NumberInput` component with styled step buttons.
+
+### 5.39.1
+
+- Adjust button padding to ensure icon-only buttons remain square.
+- Make `UtilityButton` inherit `font-family`.
+
+### 5.39.0
+
+- `PopoverReference` and `Tooltip` can now accept function children. The function is passed a props object with a `ref` object and event handlers. These props must be spread onto the element to attach the `PopoverReference` or `Tooltip` to, allowing consumers to avoid the extra wrapping DOM element that is used by default.
+- Fix scaling of icon SVGs within `Button` components. v6 `Buttons` no longer scale svgs at all; it is up to the consumer to choose a properly sized icon. Legacy `Buttons` now use `18px` sizing for small and medium sizes instead of `16px`, to conform with design standards.
+- Fix bug preventing `Switch` components from rendering properly when the host environment globally sets `box-sizing: border-box` on `:after` pseudo-elements.
+
+### 5.38.2
+
+- Add complex filter support to simple and paginated grid
+- Fix `hasInteractableElement` prop not correctly blocking rowClick
+
+### 5.38.1
+
+- Correct home/end key handling logic in text input components.
+- Fix `Input` proptypes to allow responsive `variant`.
+
+### 5.38.0
+
+- Add deprecation notices to the `FilePicker`, `GroupSelector`, and `ProductDrawer` components.
+- These components are now available from individual packages in the [FaithlifeEquipment](https://git.faithlife.dev/Logos/FaithlifeEquipment) repo.
+
+### 5.37.0
+
+- Stop auto-focusing `GroupSelector` when using the showInPlace option.
+- Minor code cleanup in `Input` and `Dropdown` components.
+- Add `Home` and `End` key support to `Select` components.
+
+### 5.36.0
+
+- Add `message` and `actions` props to the `Modal.Header` component.
+
+### 5.35.1
+
+- Fix `selectOnFocus`.
+
+### 5.35.0
+
+- Accept styled system props in more Accordion components.
+- Add `selectOnFocus` prop to `Input`.
+
+### 5.34.4
+
+- Improve `Slider` performance.
+- Fix bug where `Slider` handle would not render when value did not exactly match a stop.
+
+### 5.34.3
+
+- Fix bug causing accordion header subtitles to be clipped.
+
+### 5.34.2
+
+- Update grid drag icon to spec
+- Fix custom editor components in grid not being found
+
+### 5.34.1
+
+- Fix accordion header alignment.
+- Increase Switch transition animation speed.
+
+### 5.34.0
+
+- Hide browser's default focus outline on active buttons (we handle this state with a shadow).
+- Add Switch component.
+- Vertically center accordion header custom indicators.
+- Fix focus styling on Accordion section header buttons.
+
+### 5.33.1
+
+- Fix `Slider` propType warnings from props that shouldn't have been spread.
+
+### 5.33.0
+
+- Add localization override for `drawerToggleText` to `ProductDrawer`.
+- Fix styled-components `attr` deprecation warnings.
+
+### 5.32.0
+
+- Allow `ListBoxMenu` to accept children other than `ListBoxItem`.
+
+### 5.31.3
+
+- Fix error in `SequencedTab` use of styled-system props.
+
+### 5.31.2
+
+- Update `Slider` component to accept styled-system props.
+
+### 5.31.1
+
+- Fix infinite `TabPanel` render bug.
+- Fix errors with certain `LegacyModal` children.
+
+### 5.31.0
+
+- Add `tabletRightOffset` styleOverride to `ProductDrawer`.
+
+### 5.30.0
+
+- Add checkbox support to all grids.
+- Disable right click context menu for shared grids.
+- Add drag and drop to `SimpleGrid` and `TreeGrid`.
+- Add ref handles for checkbox selection.
+- Add in grid editing.
+- Add context prop to all grids.
+- Enable autoSizing when no maxRows is specified for all grids.
+
+### 5.29.2
+
+- Fix icon size on `small` `FilterInput` components.
+
+### 5.29.1
+
+- Update all grid components to correctly handle `isLarge/SmallViewportOnly` and `hide` props together correctly.
+
+### 5.29.0
+
+- Update `AmberContent` and `Tab` components to accept styled-system props.
+
+### 5.28.5
+
+- Use v6 `Modal` in ShareDialog component.
+- Update GroupSelector to always show the Create button.
+
+### 5.28.4
+
+- Use LegacyButton in a few more internal components. Fixes a regression in 5.28.0.
+
+### 5.28.3
+
+- Use LegacyButton in a few internal components. Fixes a regression in 5.28.0.
+
+### 5.28.2
+
+- Update GroupSelector styles.
+
+### 5.28.1
+
+- Add `v6` entry point to published files.
+
+### 5.28.0
+
+- Add `v6` entry point with new APIs.
+- Add v6 `Modal` component.
+- Add v6 `Button` component.
+- Add v6 `SegmentedButtonGroup` component.
+- Update input placeholder color.
+- Resize columns in PaginatedGrid on page change to account for scrollbars.
+
+### 5.27.0
+
+- Add `useTheme` hook.
+
+### 5.26.0
+
+- Add additional `styleOverrides` to `ProductDrawer`.
+- Fix icon fill in `HelpBox`.
+
+### 5.25.1
+
+- Update grid styles to fix style issues in chms grids
+- Update `react-select` component to v2.4.4
+
+### 5.25.0
+
+- Allow empty values in date picker input.
+- Add bottom border to `Accordion`.
+- Allow falsy value to be set in `Input`.
+- Don't lazy load product drawer dropdown.
+
+### 5.24.0
+
+- Add `UtilityButton` component.
+- Add row masonry components.
+- Fix accordion header color.
+- Fix blur handler in `ProductDrawer`.
+
+### 5.23.2
+
+- Add `@faithlife/styled-ui/grid` as an entry point
+
+### 5.23.1
+
+- Fix element rendered by `Heading`.
+
+### 5.23.0
+
+- Add `Heading` component for convenient application of heading text styles.
+- Set default text color on `Text` and `Paragraph`.
+
+### 5.22.2
+
+- Specify a unique name for `ProductDrawer`'s webpack JSONP function.
+
+### 5.22.1
+
+- Export `Grid` components as separate entry point
+
+### 5.22.0
+
+- Add documentation on horizontal stacks
+- Make `ModalContainer` padding consistent
+- Update `InferTooltip` content
+- Add Grid Components: `SimpleGrid`, `PaginatedGrid`, `TreeGrid`
+
+### 5.21.2
+
+- Fix input border color.
+- Use correct chevron icons for accordion.
+
+### 5.21.1
+
+- Remove accidental bottom margin from ModalHeader, added in 5.18.0.
+
+### 5.21.0
+
+- Add `FilterInput` component.
+- Accept styled system props in `PopoverManager`.
+
+### 5.20.0
+
+- Add `minimal` variation to `Accordion`.
+- Support `pinned` prop on `Accordion.Item` to disable expand/collapse interaction
+- Support `hideArrow` prop on `Accordion.Item`.
+
+### 5.19.3
+
+- Add support for inputBorderColor style override on DatePickerInput.
+
+### 5.19.2
+
+- Add support for pointerEvents styled-system prop.
+
+### 5.19.1
+
+- Fix bug allowing hover colors to be inheritted by `AnchorButton`.
+
 ### 5.19.0
 
 - Port `SimpleModal` to styled-system.
